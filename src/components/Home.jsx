@@ -1,14 +1,12 @@
-// src/components/home.jsx (Full Content)
-
 import React, { useContext, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import axios from "axios";
 import AppContext from "../Context/Context";
-import unplugged from "../assets/unplugged.png"
+import unplugged from "../assets/unplugged.png";
 
 const Home = ({ selectedCategory }) => {
-  // <<< FIX 3: Extract formatCurrency for the Home component
-  const { data, isError, addToCart, refreshData, formatCurrency } = useContext(AppContext);
+  const { data, isError, addToCart, refreshData, formatCurrency } =
+    useContext(AppContext);
   const [products, setProducts] = useState([]);
   const [isDataFetched, setIsDataFetched] = useState(false);
 
@@ -26,7 +24,7 @@ const Home = ({ selectedCategory }) => {
           data.map(async (product) => {
             try {
               const response = await axios.get(
-                `http://localhost:8080/api/product/${product.id}/image`,
+                `https://e-com-webapp.onrender.com/api/product/${product.id}/image`,
                 { responseType: "blob" }
               );
               const imageUrl = URL.createObjectURL(response.data);
@@ -55,11 +53,11 @@ const Home = ({ selectedCategory }) => {
   if (isError) {
     return (
       <h2 className="text-center" style={{ padding: "18rem" }}>
-      <img src={unplugged} alt="Error" style={{ width: '100px', height: '100px' }}/>
+        <img src={unplugged} alt="Error" style={{ width: "100px", height: "100px" }} />
       </h2>
     );
   }
-  
+
   return (
     <>
       <div
@@ -87,45 +85,56 @@ const Home = ({ selectedCategory }) => {
           filteredProducts.map((product) => {
             const { id, brand, name, price, productAvailable, imageUrl } =
               product;
-            
+
             return (
               <div
                 className="card mb-3"
                 style={{
                   width: "250px",
-                  height: "360px", // Fixed Card Height
+                  height: "360px",
                   boxShadow: "0 4px 8px rgba(0,0,0,0.1)",
                   borderRadius: "10px",
-                  overflow: "hidden", 
+                  overflow: "hidden",
                   backgroundColor: productAvailable ? "#fff" : "#ccc",
                   display: "flex",
                   flexDirection: "column",
-                  justifyContent:'flex-start',
-                  alignItems:'stretch'
+                  justifyContent: "flex-start",
+                  alignItems: "stretch",
                 }}
                 key={id}
               >
                 <Link
                   to={`/product/${id}`}
-                  style={{ textDecoration: "none", color: "inherit", display: "flex", flexDirection: "column", height: "100%" }} // Ensure link takes full height
+                  style={{
+                    textDecoration: "none",
+                    color: "inherit",
+                    display: "flex",
+                    flexDirection: "column",
+                    height: "100%",
+                  }}
                 >
-                  
-                  {/* <<< FIX 1: New Image Container for fixed height */}
-                  <div style={{ height: "150px", overflow: "hidden", display: "flex", justifyContent: "center", alignItems: "center" }}>
-                      <img
-                        src={imageUrl}
-                        alt={name}
-                        style={{
-                          width: "100%",
-                          height: "100%", // Use 100% of the container height
-                          objectFit: "contain", // Use 'contain' to ensure the whole image fits without cropping
-                          padding: "5px",
-                          borderRadius: "10px", 
-                        }}
-                      />
+                  <div
+                    style={{
+                      height: "150px",
+                      overflow: "hidden",
+                      display: "flex",
+                      justifyContent: "center",
+                      alignItems: "center",
+                    }}
+                  >
+                    <img
+                      src={imageUrl}
+                      alt={name}
+                      style={{
+                        width: "100%",
+                        height: "100%",
+                        objectFit: "contain",
+                        padding: "5px",
+                        borderRadius: "10px",
+                      }}
+                    />
                   </div>
-                  {/* <<< END FIX 1 */}
-                  
+
                   <div
                     className="card-body"
                     style={{
@@ -139,7 +148,14 @@ const Home = ({ selectedCategory }) => {
                     <div>
                       <h5
                         className="card-title"
-                        style={{ margin: "0 0 10px 0", fontSize: "1.2rem", height: "2.8em", overflow: "hidden", textOverflow: "ellipsis", lineHeight: "1.4em" }} // Added fixed height/overflow for title too
+                        style={{
+                          margin: "0 0 10px 0",
+                          fontSize: "1.2rem",
+                          height: "2.8em",
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                          lineHeight: "1.4em",
+                        }}
                       >
                         {name.toUpperCase()}
                       </h5>
@@ -150,21 +166,25 @@ const Home = ({ selectedCategory }) => {
                         {"~ " + brand}
                       </i>
                     </div>
+
                     <hr className="hr-line" style={{ margin: "10px 0" }} />
+
                     <div className="home-cart-price">
                       <h5
                         className="card-text"
-                        style={{ fontWeight: "600", fontSize: "1.1rem",marginBottom:'5px' }}
+                        style={{
+                          fontWeight: "600",
+                          fontSize: "1.1rem",
+                          marginBottom: "5px",
+                        }}
                       >
-                        {/* <<< FIX 2: Apply currency format here */}
                         {formatCurrency(price)}
                       </h5>
                     </div>
-                    
-                    {/* The button is now guaranteed a space below the price/text */}
+
                     <button
                       className="btn-hover color-9"
-                      style={{margin:'10px 25px 0px ' }}
+                      style={{ margin: "10px 25px 0px " }}
                       onClick={(e) => {
                         e.preventDefault();
                         addToCart(product);
@@ -172,7 +192,7 @@ const Home = ({ selectedCategory }) => {
                       disabled={!productAvailable}
                     >
                       {productAvailable ? "Add to Cart" : "Out of Stock"}
-                    </button> 
+                    </button>
                   </div>
                 </Link>
               </div>

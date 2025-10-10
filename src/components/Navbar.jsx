@@ -1,28 +1,29 @@
 import React, { useEffect, useState } from "react";
-import Home from "./Home"
 import axios from "axios";
-// import { json } from "react-router-dom";
-// import { BiSunFill, BiMoon } from "react-icons/bi";
 
 const Navbar = ({ onSelectCategory, onSearch }) => {
   const getInitialTheme = () => {
     const storedTheme = localStorage.getItem("theme");
     return storedTheme ? storedTheme : "light-theme";
   };
+
   const [selectedCategory, setSelectedCategory] = useState("");
   const [theme, setTheme] = useState(getInitialTheme());
   const [input, setInput] = useState("");
   const [searchResults, setSearchResults] = useState([]);
   const [noResults, setNoResults] = useState(false);
-  const [searchFocused, setSearchFocused] = useState(false);
-  const [showSearchResults,setShowSearchResults] = useState(false)
+  const [showSearchResults, setShowSearchResults] = useState(false);
+
   useEffect(() => {
     fetchData();
   }, []);
 
-  const fetchData = async (value) => {
+  // ✅ Use your Render backend URL
+  const BASE_URL = "https://e-com-webapp.onrender.com/api";
+
+  const fetchData = async () => {
     try {
-      const response = await axios.get("http://localhost:8080/api/products");
+      const response = await axios.get(`${BASE_URL}/products`);
       setSearchResults(response.data);
       console.log(response.data);
     } catch (error) {
@@ -33,17 +34,17 @@ const Navbar = ({ onSelectCategory, onSearch }) => {
   const handleChange = async (value) => {
     setInput(value);
     if (value.length >= 1) {
-      setShowSearchResults(true)
-    try {
-      const response = await axios.get(
-        `http://localhost:8080/api/products/search?keyword=${value}`
-      );
-      setSearchResults(response.data);
-      setNoResults(response.data.length === 0);
-      console.log(response.data);
-    } catch (error) {
-      console.error("Error searching:", error);
-    }
+      setShowSearchResults(true);
+      try {
+        const response = await axios.get(
+          `${BASE_URL}/products/search?keyword=${value}`
+        );
+        setSearchResults(response.data);
+        setNoResults(response.data.length === 0);
+        console.log(response.data);
+      } catch (error) {
+        console.error("Error searching:", error);
+      }
     } else {
       setShowSearchResults(false);
       setSearchResults([]);
@@ -51,11 +52,11 @@ const Navbar = ({ onSelectCategory, onSearch }) => {
     }
   };
 
-
   const handleCategorySelect = (category) => {
     setSelectedCategory(category);
     onSelectCategory(category);
   };
+
   const toggleTheme = () => {
     const newTheme = theme === "dark-theme" ? "light-theme" : "dark-theme";
     setTheme(newTheme);
@@ -74,6 +75,7 @@ const Navbar = ({ onSelectCategory, onSearch }) => {
     "Toys",
     "Fashion",
   ];
+
   return (
     <>
       <header>
@@ -133,9 +135,8 @@ const Navbar = ({ onSelectCategory, onSearch }) => {
                     ))}
                   </ul>
                 </li>
-
-                <li className="nav-item"></li>
               </ul>
+
               <button className="theme-btn" onClick={() => toggleTheme()}>
                 {theme === "dark-theme" ? (
                   <i className="bi bi-moon-fill"></i>
@@ -143,6 +144,7 @@ const Navbar = ({ onSelectCategory, onSearch }) => {
                   <i className="bi bi-sun-fill"></i>
                 )}
               </button>
+
               <div className="d-flex align-items-center cart">
                 <a href="/cart" className="nav-link text-dark">
                   <i
@@ -152,7 +154,7 @@ const Navbar = ({ onSelectCategory, onSearch }) => {
                     Cart
                   </i>
                 </a>
-                {/* <form className="d-flex" role="search" onSubmit={handleSearch} id="searchForm"> */}
+
                 <input
                   className="form-control me-2"
                   type="search"
@@ -160,36 +162,29 @@ const Navbar = ({ onSelectCategory, onSearch }) => {
                   aria-label="Search"
                   value={input}
                   onChange={(e) => handleChange(e.target.value)}
-                  onFocus={() => setSearchFocused(true)} // Set searchFocused to true when search bar is focused
-                  onBlur={() => setSearchFocused(false)} // Set searchFocused to false when search bar loses focus
                 />
                 {showSearchResults && (
                   <ul className="list-group">
-                    {searchResults.length > 0 ? (  
-                        searchResults.map((result) => (
-                          <li key={result.id} className="list-group-item">
-                            <a href={`/product/${result.id}`} className="search-result-link">
+                    {searchResults.length > 0 ? (
+                      searchResults.map((result) => (
+                        <li key={result.id} className="list-group-item">
+                          <a
+                            href={`/product/${result.id}`}
+                            className="search-result-link"
+                          >
                             <span>{result.name}</span>
-                            </a>
-                          </li>
-                        ))
+                          </a>
+                        </li>
+                      ))
                     ) : (
                       noResults && (
                         <p className="no-results-message">
-                          No Prouduct with such Name
+                          No Product with such Name
                         </p>
                       )
                     )}
                   </ul>
                 )}
-                {/* <button
-                  className="btn btn-outline-success"
-                  onClick={handleSearch}
-                >
-                  Search Products
-                </button> */}
-                {/* </form> */}
-                <div />
               </div>
             </div>
           </div>

@@ -2,11 +2,10 @@ import React, { useContext, useState, useEffect } from "react";
 import AppContext from "../Context/Context";
 import axios from "axios";
 import CheckoutPopup from "./CheckoutPopup";
-import { Button } from 'react-bootstrap';
+import { Button } from "react-bootstrap";
 
 const Cart = () => {
-  // <<< FIX 1: Extract the formatCurrency function from context
-  const { cart, removeFromCart , clearCart, formatCurrency } = useContext(AppContext);
+  const { cart, removeFromCart, clearCart, formatCurrency } = useContext(AppContext);
   const [cartItems, setCartItems] = useState([]);
   const [totalPrice, setTotalPrice] = useState(0);
   const [cartImage, setCartImage] = useState([]);
@@ -16,7 +15,7 @@ const Cart = () => {
     const fetchImagesAndUpdateCart = async () => {
       console.log("Cart", cart);
       try {
-        const response = await axios.get("http://localhost:8080/api/products");
+        const response = await axios.get("https://e-com-webapp.onrender.com/api/products");
         const backendProductIds = response.data.map((product) => product.id);
 
         const updatedCartItems = cart.filter((item) => backendProductIds.includes(item.id));
@@ -24,11 +23,11 @@ const Cart = () => {
           updatedCartItems.map(async (item) => {
             try {
               const response = await axios.get(
-                `http://localhost:8080/api/product/${item.id}/image`,
+                `https://e-com-webapp.onrender.com/api/product/${item.id}/image`,
                 { responseType: "blob" }
               );
               const imageFile = await converUrlToFile(response.data, response.data.imageName);
-              setCartImage(imageFile)
+              setCartImage(imageFile);
               const imageUrl = URL.createObjectURL(response.data);
               return { ...item, imageUrl };
             } catch (error) {
@@ -37,7 +36,6 @@ const Cart = () => {
             }
           })
         );
-        console.log("cart",cart)
         setCartItems(cartItemsWithImages);
       } catch (error) {
         console.error("Error fetching product data:", error);
@@ -60,7 +58,7 @@ const Cart = () => {
   const converUrlToFile = async (blobData, fileName) => {
     const file = new File([blobData], fileName, { type: blobData.type });
     return file;
-  }
+  };
 
   const handleIncreaseQuantity = (itemId) => {
     const newCartItems = cartItems.map((item) => {
@@ -75,7 +73,6 @@ const Cart = () => {
     });
     setCartItems(newCartItems);
   };
-  
 
   const handleDecreaseQuantity = (itemId) => {
     const newCartItems = cartItems.map((item) =>
@@ -97,25 +94,25 @@ const Cart = () => {
       for (const item of cartItems) {
         const { imageUrl, imageName, imageData, imageType, quantity, ...rest } = item;
         const updatedStockQuantity = item.stockQuantity - item.quantity;
-  
+
         const updatedProductData = { ...rest, stockQuantity: updatedStockQuantity };
-        console.log("updated product data", updatedProductData)
-  
+        console.log("updated product data", updatedProductData);
+
         const cartProduct = new FormData();
         cartProduct.append("imageFile", cartImage);
         cartProduct.append(
           "product",
           new Blob([JSON.stringify(updatedProductData)], { type: "application/json" })
         );
-  
+
         await axios
-          .put(`http://localhost:8080/api/product/${item.id}`, cartProduct, {
+          .put(`https://e-com-webapp.onrender.com/api/product/${item.id}`, cartProduct, {
             headers: {
               "Content-Type": "multipart/form-data",
             },
           })
           .then((response) => {
-            console.log("Product updated successfully:", (cartProduct));
+            console.log("Product updated successfully:", cartProduct);
           })
           .catch((error) => {
             console.error("Error updating product:", error);
@@ -146,7 +143,6 @@ const Cart = () => {
                   style={{ display: "flex", alignContent: "center" }}
                   key={item.id}
                 >
-                  
                   <div>
                     <img
                       src={item.imageUrl}
@@ -163,29 +159,21 @@ const Cart = () => {
                     <button
                       className="plus-btn"
                       type="button"
-                      name="button"
                       onClick={() => handleIncreaseQuantity(item.id)}
                     >
                       <i className="bi bi-plus-square-fill"></i>
                     </button>
-                    <input
-                      type="button"
-                      name="name"
-                      value={item.quantity}
-                      readOnly
-                    />
+                    <input type="button" value={item.quantity} readOnly />
                     <button
                       className="minus-btn"
                       type="button"
-                      name="button"
                       onClick={() => handleDecreaseQuantity(item.id)}
                     >
                       <i className="bi bi-dash-square-fill"></i>
                     </button>
                   </div>
 
-                  <div className="total-price " style={{ textAlign: "center" }}>
-                    {/* <<< FIX 2A: Price per item line */}
+                  <div className="total-price" style={{ textAlign: "center" }}>
                     {formatCurrency(item.price * item.quantity)}
                   </div>
                   <button
@@ -197,8 +185,7 @@ const Cart = () => {
                 </div>
               </li>
             ))}
-            {/* <<< FIX 2B: Total Price line */}
-            <div className="total">Total: {formatCurrency(totalPrice)}</div> 
+            <div className="total">Total: {formatCurrency(totalPrice)}</div>
             <Button
               className="btn btn-primary"
               style={{ width: "100%" }}
@@ -217,7 +204,6 @@ const Cart = () => {
         handleCheckout={handleCheckout}
       />
     </div>
-
   );
 };
 
