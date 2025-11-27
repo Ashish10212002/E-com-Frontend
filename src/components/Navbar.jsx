@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import axios from "axios";
+import axios from "../axios"; // ✅ UPDATED
 
 const Navbar = ({ onSelectCategory, onSearch }) => {
   const getInitialTheme = () => {
@@ -18,14 +18,11 @@ const Navbar = ({ onSelectCategory, onSearch }) => {
     fetchData();
   }, []);
 
-  // ✅ Use your Render backend URL
-  const BASE_URL = "https://e-com-webapp.onrender.com/api";
-
   const fetchData = async () => {
     try {
-      const response = await axios.get(`${BASE_URL}/products`);
+      // ✅ UPDATED: Relative Path
+      const response = await axios.get("/products");
       setSearchResults(response.data);
-      console.log(response.data);
     } catch (error) {
       console.error("Error fetching data:", error);
     }
@@ -36,12 +33,10 @@ const Navbar = ({ onSelectCategory, onSearch }) => {
     if (value.length >= 1) {
       setShowSearchResults(true);
       try {
-        const response = await axios.get(
-          `${BASE_URL}/products/search?keyword=${value}`
-        );
+        // ✅ UPDATED: Relative Path
+        const response = await axios.get(`/product/search?keyword=${value}`);
         setSearchResults(response.data);
         setNoResults(response.data.length === 0);
-        console.log(response.data);
       } catch (error) {
         console.error("Error searching:", error);
       }

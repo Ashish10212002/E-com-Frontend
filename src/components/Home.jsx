@@ -1,13 +1,10 @@
 import React, { useContext, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import axios from "axios";
 import AppContext from "../Context/Context";
 import unplugged from "../assets/unplugged.png";
 
 const Home = ({ selectedCategory }) => {
-  const { data, isError, addToCart, refreshData, formatCurrency } =
-    useContext(AppContext);
-  const [products, setProducts] = useState([]);
+  const { data, isError, addToCart, refreshData, formatCurrency } = useContext(AppContext);
   const [isDataFetched, setIsDataFetched] = useState(false);
 
   useEffect(() => {
@@ -17,38 +14,10 @@ const Home = ({ selectedCategory }) => {
     }
   }, [refreshData, isDataFetched]);
 
-  useEffect(() => {
-    if (data && data.length > 0) {
-      const fetchImagesAndUpdateProducts = async () => {
-        const updatedProducts = await Promise.all(
-          data.map(async (product) => {
-            try {
-              const response = await axios.get(
-                `https://e-com-webapp.onrender.com/api/product/${product.id}/image`,
-                { responseType: "blob" }
-              );
-              const imageUrl = URL.createObjectURL(response.data);
-              return { ...product, imageUrl };
-            } catch (error) {
-              console.error(
-                "Error fetching image for product ID:",
-                product.id,
-                error
-              );
-              return { ...product, imageUrl: "placeholder-image-url" };
-            }
-          })
-        );
-        setProducts(updatedProducts);
-      };
-
-      fetchImagesAndUpdateProducts();
-    }
-  }, [data]);
-
+  // FILTERING LOGIC
   const filteredProducts = selectedCategory
-    ? products.filter((product) => product.category === selectedCategory)
-    : products;
+    ? data.filter((product) => product.category === selectedCategory)
+    : data;
 
   if (isError) {
     return (
@@ -83,8 +52,7 @@ const Home = ({ selectedCategory }) => {
           </h2>
         ) : (
           filteredProducts.map((product) => {
-            const { id, brand, name, price, productAvailable, imageUrl } =
-              product;
+            const { id, brand, name, price, productAvailable, imageUrl } = product;
 
             return (
               <div
@@ -98,8 +66,6 @@ const Home = ({ selectedCategory }) => {
                   backgroundColor: productAvailable ? "#fff" : "#ccc",
                   display: "flex",
                   flexDirection: "column",
-                  justifyContent: "flex-start",
-                  alignItems: "stretch",
                 }}
                 key={id}
               >
@@ -122,8 +88,9 @@ const Home = ({ selectedCategory }) => {
                       alignItems: "center",
                     }}
                   >
+                    {/* ✅ CHANGED: Uses S3 URL directly */}
                     <img
-                      src={imageUrl}
+                      src={imageUrl} 
                       alt={name}
                       style={{
                         width: "100%",

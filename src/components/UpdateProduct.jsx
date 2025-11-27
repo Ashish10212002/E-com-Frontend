@@ -1,11 +1,11 @@
 import { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
-import axios from "axios";
+import axios from "../axios"; // ✅ UPDATED: Use Smart Axios
 
 const UpdateProduct = () => {
   const { id } = useParams();
   const [product, setProduct] = useState({});
-  const [image, setImage] = useState();
+  const [image, setImage] = useState(null);
   const [updateProduct, setUpdateProduct] = useState({
     id: null,
     name: "",
@@ -18,24 +18,15 @@ const UpdateProduct = () => {
     stockQuantity: "",
   });
 
-  // 🔥 CHANGE HERE: base URL for your deployed backend
-  const BASE_URL = "https://e-com-webapp.onrender.com/api";
-
   useEffect(() => {
     const fetchProduct = async () => {
       try {
-        const response = await axios.get(`${BASE_URL}/product/${id}`);
+        // ✅ UPDATED: Relative path, no hardcoded URL
+        const response = await axios.get(`/product/${id}`);
         setProduct(response.data);
-
-        const responseImage = await axios.get(`${BASE_URL}/product/${id}/image`, {
-          responseType: "blob",
-        });
-        const imageFile = await convertUrlToFile(
-          responseImage.data,
-          response.data.imageName
-        );
-        setImage(imageFile);
         setUpdateProduct(response.data);
+        // Note: We do NOT fetch the image blob anymore. 
+        // We just use response.data.imageUrl for preview.
       } catch (error) {
         console.error("Error fetching product:", error);
       }
@@ -44,23 +35,25 @@ const UpdateProduct = () => {
     fetchProduct();
   }, [id]);
 
-  const convertUrlToFile = async (blobData, fileName) => {
-    const file = new File([blobData], fileName, { type: blobData.type });
-    return file;
-  };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    const updatedProduct = new FormData();
-    updatedProduct.append("imageFile", image);
-    updatedProduct.append(
+    const formData = new FormData();
+    
+    // ✅ UPDATED LOGIC: 
+    // If 'image' (new file) exists, send it. 
+    // If not, send an empty blob to satisfy the @RequestPart requirement 
+    // (The backend service will ignore the empty file and keep the old URL).
+    formData.append("imageFile", image || new Blob([], { type: "application/octet-stream" }));
+    
+    formData.append(
       "product",
       new Blob([JSON.stringify(updateProduct)], { type: "application/json" })
     );
 
     try {
-      await axios.put(`${BASE_URL}/product/${id}`, updatedProduct, {
+      // ✅ UPDATED: Relative path
+      await axios.put(`/product/${id}`, formData, {
         headers: {
           "Content-Type": "multipart/form-data",
         },
@@ -142,12 +135,12 @@ const UpdateProduct = () => {
               name="category"
             >
               <option value="">Select category</option>
-              <option value="laptop">Laptop</option>
-              <option value="headphone">Headphone</option>
-              <option value="mobile">Mobile</option>
-              <option value="electronics">Electronics</option>
-              <option value="toys">Toys</option>
-              <option value="fashion">Fashion</option>
+              <option value="Laptop">Laptop</option>
+              <option value="Headphone">Headphone</option>
+              <option value="Mobile">Mobile</option>
+              <option value="Electronics">Electronics</option>
+              <option value="Toys">Toys</option>
+              <option value="Fashion">Fashion</option>
             </select>
           </div>
           <div className="col-md-4">
@@ -163,8 +156,10 @@ const UpdateProduct = () => {
           </div>
           <div className="col-md-8">
             <label className="form-label"><h6>Image</h6></label>
+            
+            {/* ✅ UPDATED IMAGE PREVIEW LOGIC */}
             <img
-              src={image ? URL.createObjectURL(image) : ""}
+              src={image ? URL.createObjectURL(image) : product.imageUrl}
               alt={product.imageName}
               style={{
                 width: "100%",
@@ -174,6 +169,7 @@ const UpdateProduct = () => {
                 margin: "0",
               }}
             />
+            
             <input
               className="form-control"
               type="file"

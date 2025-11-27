@@ -1,6 +1,6 @@
 import React, { useContext, useState, useEffect } from "react";
 import AppContext from "../Context/Context";
-import axios from "axios";
+import axios from "../axios"; // ✅ UPDATED: Smart Axios
 import CheckoutPopup from "./CheckoutPopup";
 import { Button } from "react-bootstrap";
 
@@ -8,43 +8,41 @@ const Cart = () => {
   const { cart, removeFromCart, clearCart, formatCurrency } = useContext(AppContext);
   const [cartItems, setCartItems] = useState([]);
   const [totalPrice, setTotalPrice] = useState(0);
-  const [cartImage, setCartImage] = useState([]);
   const [showModal, setShowModal] = useState(false);
 
   useEffect(() => {
-    const fetchImagesAndUpdateCart = async () => {
-      console.log("Cart", cart);
-      try {
-        const response = await axios.get("https://e-com-webapp.onrender.com/api/products");
-        const backendProductIds = response.data.map((product) => product.id);
+    // ✅ PERFORMANCE FIX: Fetch generic product data once.
+    // We map your Cart IDs to the fresh Backend Data (Price, Stock, ImageURL)
+    const fetchCartDetails = async () => {
+      if (cart.length === 0) {
+        setCartItems([]);
+        return;
+      }
 
-        const updatedCartItems = cart.filter((item) => backendProductIds.includes(item.id));
-        const cartItemsWithImages = await Promise.all(
-          updatedCartItems.map(async (item) => {
-            try {
-              const response = await axios.get(
-                `https://e-com-webapp.onrender.com/api/product/${item.id}/image`,
-                { responseType: "blob" }
-              );
-              const imageFile = await converUrlToFile(response.data, response.data.imageName);
-              setCartImage(imageFile);
-              const imageUrl = URL.createObjectURL(response.data);
-              return { ...item, imageUrl };
-            } catch (error) {
-              console.error("Error fetching image:", error);
-              return { ...item, imageUrl: "placeholder-image-url" };
-            }
-          })
-        );
-        setCartItems(cartItemsWithImages);
+      try {
+        const response = await axios.get("/products");
+        const allProducts = response.data;
+
+        // Merge Cart Quantity with Backend Product Details
+        const updatedCartItems = cart.map((cartItem) => {
+          const backendProduct = allProducts.find((p) => p.id === cartItem.id);
+          if (backendProduct) {
+            return {
+              ...backendProduct,
+              quantity: cartItem.quantity, // Keep local quantity
+              imageUrl: backendProduct.imageUrl // ✅ Use S3 URL directly
+            };
+          }
+          return cartItem;
+        }).filter(item => item !== undefined);
+
+        setCartItems(updatedCartItems);
       } catch (error) {
-        console.error("Error fetching product data:", error);
+        console.error("Error syncing cart:", error);
       }
     };
 
-    if (cart.length) {
-      fetchImagesAndUpdateCart();
-    }
+    fetchCartDetails();
   }, [cart]);
 
   useEffect(() => {
@@ -54,11 +52,6 @@ const Cart = () => {
     );
     setTotalPrice(total);
   }, [cartItems]);
-
-  const converUrlToFile = async (blobData, fileName) => {
-    const file = new File([blobData], fileName, { type: blobData.type });
-    return file;
-  };
 
   const handleIncreaseQuantity = (itemId) => {
     const newCartItems = cartItems.map((item) => {
@@ -92,37 +85,44 @@ const Cart = () => {
   const handleCheckout = async () => {
     try {
       for (const item of cartItems) {
-        const { imageUrl, imageName, imageData, imageType, quantity, ...rest } = item;
+        // Prepare updated stock
         const updatedStockQuantity = item.stockQuantity - item.quantity;
+        
+        // Create a clean object for the update (excluding image logic)
+        const productUpdate = {
+            id: item.id,
+            name: item.name,
+            brand: item.brand,
+            description: item.description,
+            price: item.price,
+            category: item.category,
+            releaseDate: item.releaseDate,
+            productAvailable: item.productAvailable,
+            stockQuantity: updatedStockQuantity,
+            imageName: item.imageName,
+            imageType: item.imageType,
+            imageUrl: item.imageUrl // Keep the URL
+        };
 
-        const updatedProductData = { ...rest, stockQuantity: updatedStockQuantity };
-        console.log("updated product data", updatedProductData);
-
-        const cartProduct = new FormData();
-        cartProduct.append("imageFile", cartImage);
-        cartProduct.append(
+        const formData = new FormData();
+        // We do NOT append 'imageFile' here, so the backend preserves the old S3 URL.
+        formData.append(
           "product",
-          new Blob([JSON.stringify(updatedProductData)], { type: "application/json" })
+          new Blob([JSON.stringify(productUpdate)], { type: "application/json" })
         );
 
-        await axios
-          .put(`https://e-com-webapp.onrender.com/api/product/${item.id}`, cartProduct, {
-            headers: {
-              "Content-Type": "multipart/form-data",
-            },
-          })
-          .then((response) => {
-            console.log("Product updated successfully:", cartProduct);
-          })
-          .catch((error) => {
-            console.error("Error updating product:", error);
-          });
+        await axios.put(`/product/${item.id}`, formData, {
+            headers: { "Content-Type": "multipart/form-data" },
+        });
       }
+      
+      alert("Purchase Successful!");
       clearCart();
       setCartItems([]);
       setShowModal(false);
     } catch (error) {
-      console.log("error during checkout", error);
+      console.error("Error during checkout:", error);
+      alert("Checkout failed. Please try again.");
     }
   };
 
@@ -141,11 +141,11 @@ const Cart = () => {
                 <div
                   className="item"
                   style={{ display: "flex", alignContent: "center" }}
-                  key={item.id}
                 >
                   <div>
+                    {/* ✅ S3 URL USED HERE */}
                     <img
-                      src={item.imageUrl}
+                      src={item.imageUrl} 
                       alt={item.name}
                       className="cart-item-image"
                     />
