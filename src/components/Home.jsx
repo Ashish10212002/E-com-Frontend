@@ -16,7 +16,7 @@ const Home = ({ selectedCategory }) => {
 
   // FILTERING LOGIC
   const filteredProducts = selectedCategory
-    ? data.filter((product) => product.category === selectedCategory)
+    ? data.filter((product) => product.category.toLowerCase() === selectedCategory.toLowerCase())
     : data;
 
   if (isError) {

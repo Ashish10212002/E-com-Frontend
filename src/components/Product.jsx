@@ -9,16 +9,13 @@ const Product = () => {
   const [product, setProduct] = useState(null);
   const navigate = useNavigate();
 
-  // Your Render backend URL
-  // const BASE_URL = "https://e-com-webapp.onrender.com/api";
-
   useEffect(() => {
     const fetchProduct = async () => {
       try {
         const response = await axios.get(`/product/${id}`);
         setProduct(response.data);
-        // NO MORE SEPARATE IMAGE FETCHING!
-        // The image URL is now inside response.data.imageUrl
+        // Debugging: Check console to ensure 'description' exists
+        console.log("Product Data:", response.data); 
       } catch (error) {
         console.error("Error fetching product:", error);
       }
@@ -58,22 +55,128 @@ const Product = () => {
   return (
     <>
       <div className="containers" style={{ display: "flex" }}>
-        {/* IMAGE LOADING IS NOW DIRECT AND FAST */}
         <img
           className="left-column-img"
-          src={product.imageUrl} 
+          src={product.imageUrl}
           alt={product.imageName}
           style={{ width: "50%", height: "auto", objectFit: "contain" }}
         />
 
         <div className="right-column" style={{ width: "50%" }}>
-           {/* ... The rest of your JSX remains exactly the same ... */}
-           {/* Just copy the rest of your right-column div here */}
-           <div className="product-description">
-             {/* ... content ... */}
-             <h1>{product.name}</h1>
-             {/* ... etc ... */}
-           </div>
+          <div className="product-description">
+            <div style={{ display: "flex", justifyContent: "space-between" }}>
+              <span style={{ fontSize: "1.2rem", fontWeight: "lighter" }}>
+                {product.category}
+              </span>
+              <p className="release-date" style={{ marginBottom: "2rem" }}>
+                <h6>
+                  Listed:{" "}
+                  <span>
+                    <i>
+                      {new Date(product.releaseDate).toLocaleDateString()}
+                    </i>
+                  </span>
+                </h6>
+              </p>
+            </div>
+
+            <h1
+              style={{
+                fontSize: "2rem",
+                marginBottom: "0.5rem",
+                textTransform: "capitalize",
+                letterSpacing: "1px",
+              }}
+            >
+              {product.name}
+            </h1>
+            <i style={{ marginBottom: "3rem" }}>{product.brand}</i>
+            
+            <p
+              style={{
+                fontWeight: "bold",
+                fontSize: "1rem",
+                margin: "10px 0px 0px",
+              }}
+            >
+              PRODUCT DESCRIPTION :
+            </p>
+            
+            {/* ✅ FIXED: Description is now visible */}
+            <p style={{ marginBottom: "1rem" }}>{product.description}</p>
+          </div>
+
+          <div className="product-price">
+            <span style={{ fontSize: "2rem", fontWeight: "bold" }}>
+              {/* ✅ FIXED: Using Context formatter */}
+              {formatCurrency(product.price)}
+            </span>
+            <button
+              className={`cart-btn ${
+                !product.productAvailable ? "disabled-btn" : ""
+              }`}
+              onClick={handlAddToCart}
+              disabled={!product.productAvailable}
+              style={{
+                padding: "1rem 2rem",
+                fontSize: "1rem",
+                backgroundColor: "#007bff",
+                color: "white",
+                border: "none",
+                borderRadius: "5px",
+                cursor: "pointer",
+                marginBottom: "1rem",
+              }}
+            >
+              {product.productAvailable ? "Add to cart" : "Out of Stock"}
+            </button>
+            <h6 style={{ marginBottom: "1rem" }}>
+              Stock Available:{" "}
+              <i style={{ color: "green", fontWeight: "bold" }}>
+                {product.stockQuantity}
+              </i>
+            </h6>
+          </div>
+
+          <div
+            className="update-button"
+            style={{ display: "flex", gap: "1rem" }}
+          >
+            <button
+              className="btn btn-primary"
+              type="button"
+              onClick={handleEditClick}
+              style={{
+                padding: "1rem 2rem",
+                fontSize: "1rem",
+                backgroundColor: "#007bff",
+                color: "white",
+                border: "none",
+                borderRadius: "5px",
+                cursor: "pointer",
+                marginBottom: "1rem",
+              }}
+            >
+              Update
+            </button>
+            <button
+              className="btn btn-primary"
+              type="button"
+              onClick={deleteProduct}
+              style={{
+                padding: "1rem 2rem",
+                fontSize: "1rem",
+                backgroundColor: "#dc3545",
+                color: "white",
+                border: "none",
+                borderRadius: "5px",
+                cursor: "pointer",
+                marginBottom: "1rem",
+              }}
+            >
+              Delete
+            </button>
+          </div>
         </div>
       </div>
     </>
