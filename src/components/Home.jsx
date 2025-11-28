@@ -1,10 +1,11 @@
 import React, { useContext, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import AppContext from "../Context/Context";
+import AppContext from "../Context/Context"; // Make sure path is correct
 import unplugged from "../assets/unplugged.png";
 
 const Home = ({ selectedCategory }) => {
-  const { data, isError, addToCart, refreshData, formatCurrency } = useContext(AppContext);
+  // ✅ Destructure isLoading from Context
+  const { data, isError, addToCart, refreshData, formatCurrency, isLoading } = useContext(AppContext);
   const [isDataFetched, setIsDataFetched] = useState(false);
 
   useEffect(() => {
@@ -24,6 +25,19 @@ const Home = ({ selectedCategory }) => {
       <h2 className="text-center" style={{ padding: "18rem" }}>
         <img src={unplugged} alt="Error" style={{ width: "100px", height: "100px" }} />
       </h2>
+    );
+  }
+
+  // ✅ NEW: Show Spinner while loading
+  if (isLoading) {
+    return (
+        <div className="loader-container">
+            <div className="loader"></div>
+            <div className="loading-text">Loading Products...</div>
+            <div style={{fontSize: "0.8rem", color: "#888", marginTop: "10px"}}>
+                (Waking up free server, please wait 30s)
+            </div>
+        </div>
     );
   }
 
@@ -88,7 +102,7 @@ const Home = ({ selectedCategory }) => {
                       alignItems: "center",
                     }}
                   >
-                    {/* ✅ CHANGED: Uses S3 URL directly */}
+                    {/* ✅ Uses S3 URL directly */}
                     <img
                       src={imageUrl} 
                       alt={name}

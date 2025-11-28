@@ -1,19 +1,15 @@
-// src/context/AppContext.jsx (Full Content)
-
 import axios from "../axios";
 import { useState, useEffect, createContext } from "react";
 
 // --- START: Currency Configuration ---
 const CURRENCY_CODE = 'INR';
-const CURRENCY_LOCALE = 'en-IN'; // Use India locale for INR formatting (₹ symbol and lakhs/crores separators)
+const CURRENCY_LOCALE = 'en-IN'; 
 
 const formatCurrency = (amount) => {
-    // Ensure the amount is treated as a number
     const numericAmount = parseFloat(amount); 
     if (isNaN(numericAmount)) {
         return 'Price Unavailable';
     }
-    
     return new Intl.NumberFormat(CURRENCY_LOCALE, {
         style: 'currency',
         currency: CURRENCY_CODE,
@@ -22,7 +18,6 @@ const formatCurrency = (amount) => {
 };
 // --- END: Currency Configuration ---
 
-
 const AppContext = createContext({
     data: [],
     isError: "",
@@ -30,15 +25,18 @@ const AppContext = createContext({
     addToCart: (product) => {},
     removeFromCart: (productId) => {},
     refreshData:() =>{},
-    updateStockQuantity: (productId, newQuantity) =>{},
-    formatCurrency: (amount) => {} // Added to context interface
+    clearCart: () => {},
+    formatCurrency: (amount) => {},
+    isLoading: true, // Added default
 });
 
 export const AppProvider = ({ children }) => {
     const [data, setData] = useState([]);
     const [isError, setIsError] = useState("");
     const [cart, setCart] = useState(JSON.parse(localStorage.getItem('cart')) || []);
-
+    
+    // ✅ NEW: Loading State
+    const [isLoading, setIsLoading] = useState(true);
 
     const addToCart = (product) => {
         const existingProductIndex = cart.findIndex((item) => item.id === product.id);
@@ -58,23 +56,26 @@ export const AppProvider = ({ children }) => {
     };
 
     const removeFromCart = (productId) => {
-        console.log("productID",productId)
+        console.log("productID", productId)
         const updatedCart = cart.filter((item) => item.id !== productId);
         setCart(updatedCart);
         localStorage.setItem('cart', JSON.stringify(updatedCart));
-        console.log("CART",cart)
+        console.log("CART", cart)
     };
 
     const refreshData = async () => {
+        setIsLoading(true); // ✅ Start Loading
         try {
             const response = await axios.get("/products");
             setData(response.data);
         } catch (error) {
             setIsError(error.message);
+        } finally {
+            setIsLoading(false); // ✅ Stop Loading (Success or Fail)
         }
     };
 
-    const clearCart =() =>{
+    const clearCart = () => {
         setCart([]);
     }
     
@@ -96,7 +97,8 @@ export const AppProvider = ({ children }) => {
                 removeFromCart,
                 refreshData, 
                 clearCart,
-                formatCurrency // Exposed the new function
+                formatCurrency,
+                isLoading // ✅ Exposed to app
             }}
         >
             {children}
