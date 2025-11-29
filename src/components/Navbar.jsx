@@ -1,39 +1,25 @@
-import React, { useEffect, useState } from "react";
-import axios from "../axios"; // ✅ UPDATED
+import React, { useEffect, useState, useContext } from "react"; // ✅ Added useContext
+import axios from "../axios";
+import { Link } from "react-router-dom"; 
+import AppContext from "../Context/Context"; // ✅ Import Context for Cart Count
 
 const Navbar = ({ onSelectCategory, onSearch }) => {
-  const getInitialTheme = () => {
-    const storedTheme = localStorage.getItem("theme");
-    return storedTheme ? storedTheme : "light-theme";
-  };
+  
+  // ✅ 1. Get Cart from Context to show real number
+  const { cart } = useContext(AppContext);
 
-  const [selectedCategory, setSelectedCategory] = useState("");
-  const [theme, setTheme] = useState(getInitialTheme());
   const [input, setInput] = useState("");
   const [searchResults, setSearchResults] = useState([]);
   const [noResults, setNoResults] = useState(false);
   const [showSearchResults, setShowSearchResults] = useState(false);
 
-  useEffect(() => {
-    fetchData();
-  }, []);
-
-  const fetchData = async () => {
-    try {
-      // ✅ UPDATED: Relative Path
-      const response = await axios.get("/products");
-      setSearchResults(response.data);
-    } catch (error) {
-      console.error("Error fetching data:", error);
-    }
-  };
+  // Removed Theme Logic (Dark Mode Deleted)
 
   const handleChange = async (value) => {
     setInput(value);
     if (value.length >= 1) {
       setShowSearchResults(true);
       try {
-        // ✅ UPDATED: Relative Path
         const response = await axios.get(`/product/search?keyword=${value}`);
         setSearchResults(response.data);
         setNoResults(response.data.length === 0);
@@ -47,20 +33,11 @@ const Navbar = ({ onSelectCategory, onSearch }) => {
     }
   };
 
-  const handleCategorySelect = (category) => {
-    setSelectedCategory(category);
-    onSelectCategory(category);
+  // ✅ Function to close search when clicking a result
+  const handleSearchResultClick = () => {
+    setShowSearchResults(false);
+    setInput(""); // Optional: Clear search bar
   };
-
-  const toggleTheme = () => {
-    const newTheme = theme === "dark-theme" ? "light-theme" : "dark-theme";
-    setTheme(newTheme);
-    localStorage.setItem("theme", newTheme);
-  };
-
-  useEffect(() => {
-    document.body.className = theme;
-  }, [theme]);
 
   const categories = [
     "Laptop",
@@ -76,9 +53,12 @@ const Navbar = ({ onSelectCategory, onSearch }) => {
       <header>
         <nav className="navbar navbar-expand-lg fixed-top">
           <div className="container-fluid">
-            <a className="navbar-brand" href="/">
-              AP Gadget Store
-            </a>
+            
+            <Link className="navbar-brand brand-logo" to="/">
+                <i className="bi bi-lightning-charge-fill brand-icon"></i>
+                AP <span className="brand-text-highlight">Gadgets</span>
+            </Link>
+
             <button
               className="navbar-toggler"
               type="button"
@@ -90,40 +70,24 @@ const Navbar = ({ onSelectCategory, onSearch }) => {
             >
               <span className="navbar-toggler-icon"></span>
             </button>
-            <div
-              className="collapse navbar-collapse"
-              id="navbarSupportedContent"
-            >
+            
+            <div className="collapse navbar-collapse" id="navbarSupportedContent">
               <ul className="navbar-nav me-auto mb-2 mb-lg-0">
                 <li className="nav-item">
-                  <a className="nav-link active" aria-current="page" href="/">
-                    Home
-                  </a>
+                  <Link className="nav-link active" aria-current="page" to="/">Home</Link>
                 </li>
                 <li className="nav-item">
-                  <a className="nav-link" href="/add_product">
-                    Add Product
-                  </a>
+                  <Link className="nav-link" to="/add_product">Add Product</Link>
                 </li>
 
                 <li className="nav-item dropdown">
-                  <a
-                    className="nav-link dropdown-toggle"
-                    href="/"
-                    role="button"
-                    data-bs-toggle="dropdown"
-                    aria-expanded="false"
-                  >
+                  <a className="nav-link dropdown-toggle" href="/" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                     Categories
                   </a>
-
                   <ul className="dropdown-menu">
                     {categories.map((category) => (
                       <li key={category}>
-                        <button
-                          className="dropdown-item"
-                          onClick={() => handleCategorySelect(category)}
-                        >
+                        <button className="dropdown-item" onClick={() => onSelectCategory(category)}>
                           {category}
                         </button>
                       </li>
@@ -132,54 +96,58 @@ const Navbar = ({ onSelectCategory, onSearch }) => {
                 </li>
               </ul>
 
-              <button className="theme-btn" onClick={() => toggleTheme()}>
-                {theme === "dark-theme" ? (
-                  <i className="bi bi-moon-fill"></i>
-                ) : (
-                  <i className="bi bi-sun-fill"></i>
-                )}
-              </button>
+              {/* Removed Dark Mode Button Here */}
 
-              <div className="d-flex align-items-center cart">
-                <a href="/cart" className="nav-link text-dark">
-                  <i
-                    className="bi bi-cart me-2"
-                    style={{ display: "flex", alignItems: "center" }}
-                  >
-                    Cart
-                  </i>
-                </a>
-
-                <input
-                  className="form-control me-2"
-                  type="search"
-                  placeholder="Search"
-                  aria-label="Search"
-                  value={input}
-                  onChange={(e) => handleChange(e.target.value)}
-                />
-                {showSearchResults && (
-                  <ul className="list-group">
-                    {searchResults.length > 0 ? (
-                      searchResults.map((result) => (
-                        <li key={result.id} className="list-group-item">
-                          <a
-                            href={`/product/${result.id}`}
-                            className="search-result-link"
-                          >
-                            <span>{result.name}</span>
-                          </a>
-                        </li>
-                      ))
-                    ) : (
-                      noResults && (
-                        <p className="no-results-message">
-                          No Product with such Name
-                        </p>
-                      )
+              <div className="d-flex align-items-center cart-search-container" style={{gap: '20px'}}>
+                
+                {/* SEARCH BAR AREA */}
+                <div className="search-container" style={{position: 'relative'}}>
+                    <input
+                    className="form-control"
+                    type="search"
+                    placeholder="Search Products..."
+                    aria-label="Search"
+                    value={input}
+                    onChange={(e) => handleChange(e.target.value)}
+                    style={{width: '250px', borderRadius: '50px'}}
+                    />
+                    
+                    {/* SEARCH RESULTS DROPDOWN */}
+                    {showSearchResults && (
+                    <ul className="list-group search-dropdown">
+                        {searchResults.length > 0 ? (
+                        searchResults.map((result) => (
+                            <li key={result.id} className="list-group-item">
+                            <Link
+                                to={`/product/${result.id}`}
+                                className="search-result-link"
+                                onClick={handleSearchResultClick} // ✅ Closes search on click
+                            >
+                                <span>{result.name}</span>
+                            </Link>
+                            </li>
+                        ))
+                        ) : (
+                        noResults && (
+                            <p className="no-results-message" style={{padding: '10px'}}>
+                            No Product Found
+                            </p>
+                        )
+                        )}
+                    </ul>
                     )}
-                  </ul>
-                )}
+                </div>
+
+                {/* CART BUTTON WITH DYNAMIC COUNT */}
+                <Link to="/cart" className="nav-link text-dark cart-link">
+                  <i className="bi bi-cart-fill me-1" style={{fontSize: '1.2rem'}}></i>
+                  Cart 
+                  {/* ✅ Shows badge only if items exist */}
+                  {cart.length > 0 && (
+                      <span className="badge bg-danger ms-2 rounded-pill">{cart.length}</span>
+                  )}
+                </Link>
+
               </div>
             </div>
           </div>

@@ -9,6 +9,7 @@ const API = axios.create({
     ? "http://localhost:8080/api" 
     : "https://e-com-webapp.onrender.com/api",
 });
+// baseURL: "https://e-com-webapp.onrender.com/api",
 
 delete API.defaults.headers.common["Authorization"];
 

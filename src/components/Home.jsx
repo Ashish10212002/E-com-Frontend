@@ -28,7 +28,7 @@ const Home = ({ selectedCategory }) => {
     );
   }
 
-  // ✅ NEW: Show Spinner while loading
+  // ✅ SHOW SPINNER WHILE LOADING
   if (isLoading) {
     return (
         <div className="loader-container">
@@ -43,137 +43,69 @@ const Home = ({ selectedCategory }) => {
 
   return (
     <>
-      <div
-        className="grid"
-        style={{
-          marginTop: "64px",
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))",
-          gap: "20px",
-          padding: "20px",
-        }}
-      >
+      {/* 1. HERO SECTION */}
+      <div className="hero-section">
+        <div className="hero-content">
+          <h1>Next Gen <br /> <span className="hero-highlight">Technology</span></h1>
+          <p style={{color: "#64748b", marginBottom: "20px", fontSize: "1.1rem"}}>
+            Premium Gadgets. Unbeatable Prices. Lightning Fast.
+          </p>
+          <button className="hero-btn" onClick={() => window.scrollTo({top: 600, behavior: 'smooth'})}>
+            Explore Collection
+          </button>
+        </div>
+      </div>
+
+      {/* 2. PRODUCT GRID */}
+      <div className="grid">
         {filteredProducts.length === 0 ? (
-          <h2
-            className="text-center"
-            style={{
-              display: "flex",
-              justifyContent: "center",
-              alignItems: "center",
-            }}
-          >
-            No Products Available
+          <h2 className="text-center" style={{ width: "100%", gridColumn: "1/-1", marginTop: "50px" }}>
+            No Products Found
           </h2>
         ) : (
           filteredProducts.map((product) => {
             const { id, brand, name, price, productAvailable, imageUrl } = product;
 
             return (
-              <div
-                className="card mb-3"
-                style={{
-                  width: "250px",
-                  height: "360px",
-                  boxShadow: "0 4px 8px rgba(0,0,0,0.1)",
-                  borderRadius: "10px",
-                  overflow: "hidden",
-                  backgroundColor: productAvailable ? "#fff" : "#ccc",
-                  display: "flex",
-                  flexDirection: "column",
-                }}
-                key={id}
-              >
-                <Link
-                  to={`/product/${id}`}
-                  style={{
-                    textDecoration: "none",
-                    color: "inherit",
-                    display: "flex",
-                    flexDirection: "column",
-                    height: "100%",
-                  }}
-                >
-                  <div
-                    style={{
-                      height: "150px",
-                      overflow: "hidden",
-                      display: "flex",
-                      justifyContent: "center",
-                      alignItems: "center",
-                    }}
-                  >
-                    {/* ✅ Uses S3 URL directly */}
-                    <img
-                      src={imageUrl} 
-                      alt={name}
-                      style={{
-                        width: "100%",
-                        height: "100%",
-                        objectFit: "contain",
-                        padding: "5px",
-                        borderRadius: "10px",
-                      }}
-                    />
+              <div className="product-card" key={id}>
+                {/* Click Card to go to Details */}
+                <Link to={`/product/${id}`} style={{textDecoration: "none", color: "inherit", display:"contents"}}>
+                  
+                  {/* Image Area */}
+                  <div className="product-image-container">
+                     <img src={imageUrl} alt={name} className="product-image" />
                   </div>
 
-                  <div
-                    className="card-body"
-                    style={{
-                      flexGrow: 1,
-                      display: "flex",
-                      flexDirection: "column",
-                      justifyContent: "space-between",
-                      padding: "10px",
-                    }}
-                  >
-                    <div>
-                      <h5
-                        className="card-title"
+                  {/* Content Area */}
+                  <div className="product-info">
+                    <span className="product-brand">{brand}</span>
+                    <h3 className="product-title">{name}</h3>
+                    
+                    <div className="product-footer">
+                      <span className="product-price">{formatCurrency(price)}</span>
+                      
+                      {/* ✅ UPDATED ADD TO CART BUTTON */}
+                      <button
+                        className="add-btn-round"
+                        onClick={(e) => {
+                          e.preventDefault(); // Stop navigation
+                          if (productAvailable) {
+                            addToCart(product);
+                            alert("✅ Added to Cart!");
+                          } else {
+                            alert("❌ Sorry, this product is currently Out of Stock.");
+                          }
+                        }}
+                        title={productAvailable ? "Add to Cart" : "Out of Stock"}
                         style={{
-                          margin: "0 0 10px 0",
-                          fontSize: "1.2rem",
-                          height: "2.8em",
-                          overflow: "hidden",
-                          textOverflow: "ellipsis",
-                          lineHeight: "1.4em",
+                            opacity: productAvailable ? 1 : 0.5,
+                            cursor: productAvailable ? "pointer" : "not-allowed",
+                            backgroundColor: productAvailable ? "var(--text-primary)" : "#cbd5e1"
                         }}
                       >
-                        {name.toUpperCase()}
-                      </h5>
-                      <i
-                        className="card-brand"
-                        style={{ fontStyle: "italic", fontSize: "0.8rem" }}
-                      >
-                        {"~ " + brand}
-                      </i>
+                        <i className={`bi ${productAvailable ? "bi-plus-lg" : "bi-slash-circle"}`}></i>
+                      </button>
                     </div>
-
-                    <hr className="hr-line" style={{ margin: "10px 0" }} />
-
-                    <div className="home-cart-price">
-                      <h5
-                        className="card-text"
-                        style={{
-                          fontWeight: "600",
-                          fontSize: "1.1rem",
-                          marginBottom: "5px",
-                        }}
-                      >
-                        {formatCurrency(price)}
-                      </h5>
-                    </div>
-
-                    <button
-                      className="btn-hover color-9"
-                      style={{ margin: "10px 25px 0px " }}
-                      onClick={(e) => {
-                        e.preventDefault();
-                        addToCart(product);
-                      }}
-                      disabled={!productAvailable}
-                    >
-                      {productAvailable ? "Add to Cart" : "Out of Stock"}
-                    </button>
                   </div>
                 </Link>
               </div>
