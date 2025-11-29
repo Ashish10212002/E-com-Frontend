@@ -1,0 +1,16 @@
+<svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background circle -->
+  <circle cx="256" cy="256" r="256" fill="#0d6efd" />
+
+  <!-- Inner circle -->
+  <circle cx="256" cy="256" r="210" fill="#ffffff" />
+
+  <!-- AP Text -->
+  <text x="50%" y="54%" text-anchor="middle" font-family="Arial, sans-serif"
+        font-size="180" font-weight="700" fill="#0d6efd" dy=".35em">
+    AP
+  </text>
+
+  <!-- Small tagline line -->
+  <rect x="156" y="360" width="200" height="12" rx="6" fill="#0d6efd" />
+</svg>

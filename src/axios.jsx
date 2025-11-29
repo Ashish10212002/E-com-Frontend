@@ -10,7 +10,7 @@ const API = axios.create({
     : "https://e-com-webapp.onrender.com/api",
 });
 // baseURL: "https://e-com-webapp.onrender.com/api",
-
+// });
 delete API.defaults.headers.common["Authorization"];
 
 export default API;
